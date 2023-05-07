@@ -1,0 +1,9 @@
+{
+  "endpoint": "http://host.docker.internal:8083",
+  "auth":
+  {
+      "email": "leland@stanford.edu",
+      "api_key": "a4ik5VlWDQ2GNP8GATCHJ5z8TGsMy_ODkTEPCPCtVus"
+  }
+}
+
