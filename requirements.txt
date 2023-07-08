@@ -1,11 +1,14 @@
 click==8.0.3
-Flask==2.0.2
+flask==2.0.2
 itsdangerous==2.0.1
 Jinja2==3.0.2
 MarkupSafe==2.0.1
 Werkzeug==2.0.2
-playgroundrl==0.0.13
+playgroundrl==0.0.50
 python-socketio==5.6.0
 attrs==22.2.0
 cattrs==22.2.0
 requests==2.29.0
+scikit-learn==1.2.2
+scipy==1.10.1
+numpy==1.24.2
