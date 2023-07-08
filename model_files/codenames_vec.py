@@ -11,7 +11,7 @@ class TestCodenames(PlaygroundClient):
     def __init__(self, auth_file: str, render: bool = False):
         super().__init__(
             GameType.CODENAMES,
-            model_name="naive-codenames",
+            model_name="embedded-codenames-docker",
             auth_file=auth_file,
             render_gameplay=render,
         )
@@ -80,11 +80,9 @@ class TestCodenames(PlaygroundClient):
                         and state.actual[i][j] == state.color
                     ):
                         words_remaining.append(state.words[i][j])
-            # print(words_remaining)
 
             # always give a clue for one word which is randomly picked
             desired_word = words_remaining[random.randrange(len(words_remaining))]
-            # print("selecting the word:", desired_word)
             ordered_words = self.find_closest_embeddings(
                 self.embeddings_dict[desired_word]
             )
@@ -98,7 +96,6 @@ class TestCodenames(PlaygroundClient):
                     and desired_word not in word
                 ):
                     self.clues_given.add(word)
-                    # print("using the clue", word)
                     action = {"word": word, "count": 1}
                     break
 

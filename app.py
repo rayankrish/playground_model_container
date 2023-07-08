@@ -18,7 +18,7 @@ def home():
 
 @app.route("/load")
 def load():
-    print("LOADING")
+    print("Loading model...")
     global model
     if model is None:
         # TODO: Abstract this
@@ -26,7 +26,6 @@ def load():
             "auth.txt",
             False,
         )
-        # print(model)
     return "<h1>Loaded Successfully</h2>"
 
 
@@ -37,12 +36,10 @@ def save():
 
 @app.route("/start_game")
 def start_game():
-    print("START GAME")
     global model
     global running
     # print(model)
     if model is None:
-        print("MODEL NOT STARTED")
         return "<h1>Model not started</h2>"
     else:
         pool = Pool(int(request.args.get("pool")))
@@ -55,21 +52,20 @@ def start_game():
             self_training=False,
             maximum_messages=500000,
             wait_for_game_end=False,
-            # TODO: DO THIS BETTER
+            # TODO: Read this in from query
             game_parameters={"num_players": 4},
         )
-        print("AFTER RETURN")
 
         # Hack to return to the client early
         response = Response("<h1>Started Model</h2>")
 
+        # This allows us to wait for the game to finish,
+        # while still returning a response to the user
         @response.call_on_close
         def on_close():
-            print("WAITING FOR CLOSE")
             model.wait_for_game()
             global running
             running = False
-            print("FINISHED ON CLOSE ")
 
         return response
 
@@ -86,7 +82,6 @@ def available():
     # See if container is live and can run model
     global model
 
-    print("RUNNING", running)
     if model is not None and not running:
         return Response("Available", status=200)
 
