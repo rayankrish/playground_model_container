@@ -5,6 +5,8 @@ from scipy import spatial
 from sklearn.cluster import KMeans
 import random
 
+BOARD_SIZE = 25
+
 
 # The following line are an example of how to use the API
 class TestCodenames(PlaygroundClient):
@@ -33,53 +35,48 @@ class TestCodenames(PlaygroundClient):
     def find_closest_embeddings(self, embedding):
         return sorted(
             self.embeddings_dict.keys(),
-            key=lambda word: spatial.distance.euclidean(
+            key=lambda word: -spatial.distance.euclidean(
                 self.embeddings_dict[word], embedding
             ),
         )
 
     def get_open_square(self, state: CodenamesState):
-        for i in range(5):
-            for j in range(5):
-                if state.guessed[i][j] == "UNKNOWN":
-                    return [i, j]
+        for i in range(BOARD_SIZE):
+            if state.guessed[i] == "UNKNOWN":
+                return i
 
     def rank_board_by_sim(self, word):
-        all_positions = sum([[(i, j) for j in range(5)] for i in range(5)], [])
+        all_positions = list(range(BOARD_SIZE))
         word_vec = self.embeddings_dict[word]
         order = sorted(
             all_positions,
             key=lambda pos: spatial.distance.euclidean(
-                self.board_vectors[pos[0]][pos[1]], word_vec
+                self.board_vectors[pos], word_vec
             ),
         )
+        print("ORDER", order)
         return order
 
     def callback(self, state: CodenamesState, reward):
         if state.player_moving_id not in self.player_ids:
             return None
         if len(self.board_vectors) == 0:
-            for word in sum(state.words, []):
+            for word in state.words:
                 if word not in self.embeddings_dict:
                     self.embeddings_dict[word] = self.embeddings_dict[
                         "clue"
                     ]  # TODO: improve this
-            self.board_vectors = [
-                [self.embeddings_dict[word] for word in arr] for arr in state.words
-            ]
+            self.board_vectors = [self.embeddings_dict[word] for word in state.words]
+        print(self.board_vectors)
         if len(self.words_set) == 0:
-            self.words_set = set(sum(state.words, []))
+            self.words_set = set(state.words)
 
         action = None
         if state.role == "GIVER":
             words_remaining = []
-            for i in range(5):
-                for j in range(5):
-                    if (
-                        state.guessed[i][j] == "UNKNOWN"
-                        and state.actual[i][j] == state.color
-                    ):
-                        words_remaining.append(state.words[i][j])
+            for i in range(BOARD_SIZE):
+                if state.guessed[i] == "UNKNOWN" and state.actual[i] == state.color:
+                    words_remaining.append(state.words[i])
 
             # always give a clue for one word which is randomly picked
             desired_word = words_remaining[random.randrange(len(words_remaining))]
@@ -102,6 +99,7 @@ class TestCodenames(PlaygroundClient):
         elif state.role == "GUESSER":
             # if clue is not in the dict, give first available
             if state.clue not in self.embeddings_dict:
+                print("DEFAULTING")
                 action = {"guess": self.get_open_square(state)}
                 return json.dumps(action)
 
@@ -109,16 +107,17 @@ class TestCodenames(PlaygroundClient):
             if not self.current_clue[0] == state.clue:
                 self.current_clue = [state.clue, state.count]
             elif self.current_clue[1] == 0:
-                action = {"guess": [-1, -1]}
+                action = {"guess": -1}
                 return json.dumps(action)
             else:
                 self.current_clue[1] -= 1
 
             # find the unknown word on the board that is closest to the clue
             order = self.rank_board_by_sim(state.clue)
-            for i, j in order:
-                if state.guessed[i][j] == "UNKNOWN":
-                    action = {"guess": [i, j]}
+            for i in order:
+                print(state.words[i])
+                if state.guessed[i] == "UNKNOWN":
+                    action = {"guess": i}
                     break
         return json.dumps(action)
 

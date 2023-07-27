@@ -1,3 +1,4 @@
+import json
 from flask import Flask, request, Response
 from model_files.snake_model import TestSnake
 from model_files.codenames_vec import TestCodenames
@@ -44,6 +45,8 @@ def start_game():
     else:
         pool = Pool(int(request.args.get("pool")))
         num_games = int(request.args.get("num_games"))
+        # TODO: Convert this to POST request
+        parameters = json.loads(request.args.get("parameters"))
         # Potentially make this nonblocking
         running = True
         model.run(
@@ -53,7 +56,7 @@ def start_game():
             maximum_messages=500000,
             wait_for_game_end=False,
             # TODO: Read this in from query
-            game_parameters={"num_players": 4},
+            game_parameters=parameters,
         )
 
         # Hack to return to the client early
